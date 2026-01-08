@@ -26,6 +26,12 @@ class User
     #[ORM\Column(options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTimeImmutable $created_at = null;
 
+
+    public function __construct()
+    {
+        $this->created_at = new \DateTimeImmutable(); // This is what you need
+    }
+
     public function getId(): ?int
     {
         return $this->id;
