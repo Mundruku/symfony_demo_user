@@ -1,19 +1,106 @@
 <?php
-
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Enum\UserStatus;
+use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[Route('/api/users')]
 final class UserController extends AbstractController
 {
-    #[Route('/user', name: 'app_user')]
-    public function index(): JsonResponse
+    /**
+     * POST /users
+     * Create a new user.
+     */
+    #[Route('', methods: ['POST'])]
+    public function create(
+        Request $request, 
+        EntityManagerInterface $em, 
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $user = new User();
+        $user->setName($data['name'] ?? '');
+        $user->setEmail($data['email'] ?? '');
+        
+        // Handle Enum conversion from string input
+        $statusValue = $data['status'] ?? 'active';
+        $user->setStatus(UserStatus::tryFrom($statusValue) ?? UserStatus::ACTIVE);
+
+        // Validation (Requirement: name min 2 chars, valid email)
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            return $this->json(['errors' => (string) $errors], 400);
+        }
+
+        $em->persist($user);
+        $em->flush();
+
+        return $this->json($user, 201);
+    }
+
+    /**
+     * GET /users
+     * List all users, newest first, optional status filter.
+     */
+    #[Route('', methods: ['GET'])]
+    public function list(Request $request, UserRepository $repository): JsonResponse
     {
+        $statusParam = $request->query->get('status');
+        $criteria = [];
+
+        if ($statusParam) {
+            $enumStatus = UserStatus::tryFrom($statusParam);
+            if ($enumStatus) {
+                $criteria['status'] = $enumStatus;
+            }
+        }
+
+        $users = $repository->findBy($criteria, ['created_at' => 'DESC']);
+
+        return $this->json($users);
+    }
+
+    /**
+     * GET /users/analytics
+     * Numeric counts for user growth.
+     */
+    #[Route('/analytics', methods: ['GET'])]
+    public function analytics(UserRepository $repository): JsonResponse
+    {
+        $totalUsers = $repository->count([]);
+
+        // Dates for filtering
+        $fifteenDaysAgo = new \DateTimeImmutable('-15 days');
+        $sevenDaysAgo = new \DateTimeImmutable('-7 days');
+
+        // Users created in last 15 days
+        $last15DaysCount = $repository->createQueryBuilder('u')
+            ->select('count(u.id)')
+            ->where('u.created_at >= :date')
+            ->setParameter('date', $fifteenDaysAgo)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Users created in last 7 days (to calculate average)
+        $last7DaysCount = $repository->createQueryBuilder('u')
+            ->select('count(u.id)')
+            ->where('u.created_at >= :date')
+            ->setParameter('date', $sevenDaysAgo)
+            ->getQuery()
+            ->getSingleScalarResult();
+
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/UserController.php',
+            'total_users' => (int) $totalUsers,
+            'created_last_15_days' => (int) $last15DaysCount,
+            'average_new_users_per_day_last_7_days' => round($last7DaysCount / 7, 2),
         ]);
     }
 }

@@ -23,7 +23,7 @@ class User
     #[ORM\Column(enumType: UserStatus::class)]
     private ?UserStatus $status = null;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTimeImmutable $created_at = null;
 
     public function getId(): ?int
