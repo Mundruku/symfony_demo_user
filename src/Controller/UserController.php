@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use App\Model\UserDto;
 
 #[Route('/api/users')]
 final class UserController extends AbstractController
@@ -20,21 +22,18 @@ final class UserController extends AbstractController
      */
     #[Route('', methods: ['POST'])]
     public function create(
-        Request $request, 
+        #[MapRequestPayload] UserDto $userDto,
         EntityManagerInterface $em, 
         ValidatorInterface $validator
     ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
 
+        return $this->json($userDto);
         $user = new User();
-        $user->setName($data['name'] ?? '');
-        $user->setEmail($data['email'] ?? '');
+        $user->setName($userDto->name);
+        $user->setEmail($userDto->email);
         
-        // Handle Enum conversion from string input
-        $statusValue = $data['status'] ?? 'active';
-        $user->setStatus(UserStatus::tryFrom($statusValue) ?? UserStatus::ACTIVE);
+        $user->setStatus($userDto->status);
 
-        // Validation (Requirement: name min 2 chars, valid email)
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
             return $this->json(['errors' => (string) $errors], 400);
