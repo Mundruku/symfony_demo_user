@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use App\Model\UserDto;
 use App\Controller\Traits\ApiResponseTrait;
 
-#[Route('/api/users')]
+#[Route('users')]
 final class UserController extends AbstractController
 {
 
@@ -55,12 +55,16 @@ final class UserController extends AbstractController
     public function list(Request $request, UserRepository $repository): JsonResponse
     {
         $statusParam = $request->query->get('status');
+      
         $criteria = [];
 
         if ($statusParam) {
             $enumStatus = UserStatus::tryFrom($statusParam);
             if ($enumStatus) {
                 $criteria['status'] = $enumStatus;
+            }
+            else {
+                return $this->errorResponse('Invalid status filter', 400);
             }
         }
 
