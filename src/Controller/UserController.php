@@ -12,10 +12,13 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use App\Model\UserDto;
+use App\Controller\Traits\ApiResponseTrait;
 
 #[Route('/api/users')]
 final class UserController extends AbstractController
 {
+
+    use ApiResponseTrait;
     /**
      * POST /users
      * Create a new user.
@@ -27,7 +30,6 @@ final class UserController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
 
-        return $this->json($userDto);
         $user = new User();
         $user->setName($userDto->name);
         $user->setEmail($userDto->email);
@@ -36,13 +38,13 @@ final class UserController extends AbstractController
 
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
-            return $this->json(['errors' => (string) $errors], 400);
+            return $this->errorResponse((string) $errors, 400);
         }
 
         $em->persist($user);
         $em->flush();
 
-        return $this->json($user, 201);
+        return $this->successResponse($user, 201);
     }
 
     /**
@@ -64,7 +66,7 @@ final class UserController extends AbstractController
 
         $users = $repository->findBy($criteria, ['created_at' => 'DESC']);
 
-        return $this->json($users);
+        return $this->successResponse($users);
     }
 
     /**

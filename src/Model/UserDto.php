@@ -8,18 +8,17 @@ use App\Enum\UserStatus;
 class UserDto
 {
     public function __construct(
-        #[Assert\NotBlank]
-        #[Assert\Length(min: 2)]
+        #[Assert\NotBlank(message: 'User name is required.')]
+        #[Assert\Length(min: 2,  minMessage: 'The user name must be at least {{ limit }} characters long.')]
         public string $name,
 
-        #[Assert\NotBlank]
+        #[Assert\NotNull(message: 'Email is required.')]
         #[Assert\Email(
             message: 'The email {{ value }} is not a valid email.',
         )]
         public string $email,
 
-        // Removed dynamic Choice argument (not allowed in attributes); rely on the UserStatus type for validation
-        #[Assert\NotBlank]
+    
         public UserStatus $status,
     ) {}
 }
