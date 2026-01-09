@@ -1,26 +1,43 @@
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: mysql:8.0
-    container_name: symfony_db
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
-      MYSQL_USER: ${MYSQL_USER:-app}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+  app:
+    build: .
+    container_name: symfony_demo_app
     ports:
-      - "3306:3306"
+      - "8000:8000"  # Changed to 443 for HTTPS simulation
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://symfony_demo:password@database:3306/symfony_demo_db
+      APP_ENV: dev
+      TRUSTED_PROXIES: 127.0.0.1
+      TRUSTED_HOSTS: localhost
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-app}", "-p${MYSQL_PASSWORD:-!ChangeMe!}"]
+      test: ["CMD", "php", "-r", "echo 'PHP is running';"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
+
+  database:
+    image: mysql:8.0
+    container_name: symfony_demo_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: symfony_demo_db
+      MYSQL_USER: symfony_demo
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
     volumes:
-      - database_data:/var/lib/mysql
-###< doctrine/doctrine-bundle ###
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "symfony", "-ppassword"]
+      timeout: 5s
+      retries: 10
+      interval: 5s
 
 volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+  db_data:
