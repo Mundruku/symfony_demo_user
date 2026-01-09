@@ -18,7 +18,7 @@ docker compose build --pull --no-cache
 
 ### 2. Start the Symfony application
 
-This will set up and start a fresh Symfony project and wait until all services are ready:
+This will set up and start a  Symfony DEMO TASK project and wait until all services are ready.:
 
 ```bash
 docker compose up --wait

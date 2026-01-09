@@ -1,0 +1,33 @@
+RUNNING THE DEMO TASK WITH DOCKER
+
+Follow the steps below to build and run the Symfony DEMO TASK project using Docker Compose.
+
+1. Build fresh Docker images
+--------------------------------
+docker compose build --pull --no-cache
+
+
+2. Start the Symfony application
+--------------------------------
+This will set up and start a  Symfony DEMO TASK project and wait until all services are ready.
+
+docker compose up --wait
+
+
+3. Access the application
+--------------------------------
+Open the application in your web browser:
+
+https://localhost
+
+You may see a browser warning due to the auto-generated TLS certificate.
+This is expected for local development. Please accept the certificate to continue.
+
+
+4. Stop the Docker containers
+--------------------------------
+When you are done, stop all containers and remove orphaned services:
+
+docker compose down --remove-orphans
+
+Note: The end points are the same ones picked from the demo guideline
