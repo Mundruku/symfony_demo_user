@@ -31,7 +31,7 @@ docker compose up --wait
 Open the application in your web browser:
 
 ```
-https://localhost
+ http://localhost:8000
 ```
 
 ⚠️ You may see a browser warning due to the auto-generated TLS certificate.  
