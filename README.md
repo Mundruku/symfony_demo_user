@@ -34,9 +34,6 @@ Open the application in your web browser:
  http://localhost:8000
 ```
 
-⚠️ You may see a browser warning due to the auto-generated TLS certificate.  
-This is expected for local development—please accept the certificate to continue.
-
 ---
 
 ### 4. Stop the Docker containers
